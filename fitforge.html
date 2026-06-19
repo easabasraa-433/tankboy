@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitForge — Build Your Strongest Self</title>
+  <meta name="description" content="Personalized workout plans, nutrition tracking, and real progress analytics. Join 50,000+ athletes on FitForge.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,900;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Barlow Condensed"', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            bg: '#080C10',
+            surface: '#0F1923',
+            'surface-2': '#162030',
+            border: '#1E2D40',
+            accent: '#E8FF47',
+            'accent-dim': 'rgba(232,255,71,0.08)',
+            'accent-border': 'rgba(232,255,71,0.2)',
+            muted: '#4A6174',
+            text: '#C8D8E8',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background-color: #080C10;
+      color: #C8D8E8;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* — Typography — */
+    .display { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.92; }
+    .display-accent { color: #E8FF47; }
+
+    /* — Layout — */
+    .page-view { display: none; }
+    .page-view.active { display: block; animation: fadeUp 0.35s ease-out both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* — Panels — */
+    .panel {
+      background: #0F1923;
+      border: 1px solid #1E2D40;
+      border-radius: 16px;
+    }
+    .panel-glass {
+      background: rgba(15,25,35,0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid #1E2D40;
+      border-radius: 16px;
+    }
+
+    /* — Accent button — */
+    .btn-accent {
+      background: #E8FF47;
+      color: #080C10;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border-radius: 10px;
+      padding: 12px 24px;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-accent:hover { background: #f5ff7a; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: #C8D8E8;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid #1E2D40;
+      border-radius: 10px;
+      padding: 12px 24px;
+      transition: all 0.18s;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: #E8FF47; color: #E8FF47; }
+
+    /* — Nav pill — */
+    .nav-link { padding: 7px 18px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A6174; transition: all 0.18s; cursor: pointer; }
+    .nav-link:hover { color: #C8D8E8; }
+    .nav-link.active-nav { color: #080C10; background: #E8FF47; }
+
+    /* — Hero ticker — */
+    .stat-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(232,255,71,0.06); border: 1px solid rgba(232,255,71,0.15); border-radius: 100px; padding: 5px 14px; font-size: 0.75rem; color: #E8FF47; font-weight: 600; }
+
+    /* — Goal card — */
+    .goal-card { cursor: pointer; transition: all 0.22s; border: 1px solid #1E2D40; background: #0F1923; border-radius: 16px; padding: 28px 24px; }
+    .goal-card:hover { border-color: rgba(232,255,71,0.35); background: #111e2b; transform: translateY(-3px); }
+    .goal-number { font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 900; color: rgba(232,255,71,0.2); line-height: 1; }
+
+    /* — Plan card — */
+    .plan-card { border: 1px solid #1E2D40; background: #0F1923; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s; }
+    .plan-card:hover { border-color: #E8FF47; }
+
+    /* — Meal card — */
+    .meal-card { border: 1px solid #1E2D40; background: #0F1923; border-radius: 16px; overflow: hidden; transition: border-color 0.2s; }
+    .meal-card:hover { border-color: rgba(232,255,71,0.3); }
+
+    /* — Macro ring — */
+    .circle-progress { transition: stroke-dashoffset 0.6s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+    /* — Table — */
+    .data-table th { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #4A6174; padding-bottom: 10px; border-bottom: 1px solid #1E2D40; }
+    .data-table td { padding: 14px 0; border-bottom: 1px solid #1E2D40; font-size: 0.85rem; color: #C8D8E8; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* — Badge — */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .badge-green { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); color: #34d399; }
+    .badge-muted { background: #0F1923; border: 1px solid #1E2D40; color: #4A6174; }
+    .badge-accent { background: rgba(232,255,71,0.08); border: 1px solid rgba(232,255,71,0.2); color: #E8FF47; }
+
+    /* — Pricing — */
+    .pricing-card { border: 1px solid #1E2D40; background: #0F1923; border-radius: 20px; padding: 32px; flex: 1; transition: all 0.2s; }
+    .pricing-card.featured { border-color: #E8FF47; background: #111e2b; }
+    .price-amount { font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 900; color: #fff; line-height: 1; }
+
+    /* — Social proof — */
+    .testimonial { border: 1px solid #1E2D40; background: #0F1923; border-radius: 16px; padding: 24px; }
+
+    /* — Modal — */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,8,12,0.85); backdrop-filter: blur(12px); }
+    .modal-panel { background: #0F1923; border: 1px solid #1E2D40; border-radius: 20px; padding: 32px; width: 100%; max-width: 420px; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+    .modal-backdrop.hidden { display: none; }
+
+    /* — Toast — */
+    #toast-container { position: fixed; top: 24px; right: 24px; z-index: 70; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { background: #0F1923; border: 1px solid #1E2D40; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 10px; font-size: 0.83rem; font-weight: 500; color: #C8D8E8; pointer-events: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transform: translateX(20px); opacity: 0; transition: all 0.3s; }
+    .toast.show { transform: translateX(0); opacity: 1; }
+
+    /* — Progress bar — */
+    .progress-bar { height: 5px; border-radius: 100px; background: #1E2D40; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 100px; background: #E8FF47; transition: width 1s ease; }
+
+    /* — Input — */
+    .input-field { width: 100%; background: #080C10; border: 1px solid #1E2D40; border-radius: 10px; padding: 10px 16px; color: #fff; font-size: 0.875rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+    .input-field:focus { border-color: #E8FF47; }
+    .input-field::placeholder { color: #4A6174; }
+    label.field-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A6174; display: block; margin-bottom: 6px; }
+
+    /* — Glow line — */
+    .glow-line { height: 1px; background: linear-gradient(90deg, transparent, rgba(232,255,71,0.4), transparent); }
+
+    /* — Scrollbar — */
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #080C10; } ::-webkit-scrollbar-thumb { background: #1E2D40; border-radius: 3px; }
+
+    /* Hamburger mobile */
+    #mobile-menu { display: none; }
+    @media(max-width: 768px) { #mobile-menu.open { display: flex; flex-direction: column; } }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- ═══ NAV ═══ -->
+<nav style="position:sticky;top:0;z-index:40;background:rgba(8,12,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid #1E2D40;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;">
+    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#E8FF47"/><path d="M6 14h3l2-5 4 10 2-5h5" stroke="#080C10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:0.02em;color:#fff;text-transform:uppercase;">FitForge</span>
+    </div>
+
+    <div class="hidden md:flex" style="gap:2px;background:#0F1923;border:1px solid #1E2D40;border-radius:10px;padding:4px;">
+      <span id="nav-home" class="nav-link active-nav" onclick="showPage('home')">Home</span>
+      <span id="nav-dashboard" class="nav-link" onclick="showPage('dashboard')">Dashboard</span>
+      <span id="nav-plans" class="nav-link" onclick="showPage('plans')">Plans</span>
+      <span id="nav-meals" class="nav-link" onclick="showPage('meals')">Nutrition</span>
+      <span id="nav-pricing" class="nav-link" onclick="showPage('pricing')">Pricing</span>
+    </div>
+
+    <div id="nav-auth-zone" class="hidden md:flex" style="align-items:center;gap:10px;">
+      <button onclick="openAuthModal()" class="btn-ghost" style="padding:8px 18px;font-size:0.8rem;">Log in</button>
+      <button onclick="openAuthModal()" class="btn-accent" style="padding:8px 20px;font-size:0.8rem;">Start Free →</button>
+    </div>
+
+    <button class="md:hidden" onclick="toggleMobileMenu()" style="color:#C8D8E8;background:none;border:none;cursor:pointer;padding:4px;">
+      <i class="ti ti-menu-2" style="font-size:1.4rem;"></i>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" style="background:#0F1923;border-top:1px solid #1E2D40;padding:16px 24px;gap:4px;">
+    <span class="nav-link active-nav" onclick="showPage('home');toggleMobileMenu()">Home</span>
+    <span class="nav-link" onclick="showPage('dashboard');toggleMobileMenu()">Dashboard</span>
+    <span class="nav-link" onclick="showPage('plans');toggleMobileMenu()">Plans</span>
+    <span class="nav-link" onclick="showPage('meals');toggleMobileMenu()">Nutrition</span>
+    <span class="nav-link" onclick="showPage('pricing');toggleMobileMenu()">Pricing</span>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button onclick="openAuthModal()" class="btn-ghost" style="flex:1;padding:10px;font-size:0.85rem;">Log in</button>
+      <button onclick="openAuthModal()" class="btn-accent" style="flex:1;padding:10px;font-size:0.85rem;">Start Free →</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 1. HOME                                    -->
+<!-- ══════════════════════════════════════════ -->
+<div id="home" class="page-view active">
+
+  <!-- Hero -->
+  <section style="max-width:1200px;margin:0 auto;padding:72px 24px 64px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;" class="hero-grid">
+      <div>
+        <div class="stat-chip" style="margin-bottom:24px;">
+          <span style="width:6px;height:6px;background:#E8FF47;border-radius:50%;display:inline-block;"></span>
+          50,000+ athletes active this month
+        </div>
+        <h1 class="display" style="font-size:clamp(4rem,8vw,7rem);color:#fff;margin-bottom:24px;">
+          FORGE<br>YOUR<br><span class="display-accent">BEST BODY</span>
+        </h1>
+        <p style="font-size:1rem;line-height:1.7;color:#4A6174;max-width:420px;margin-bottom:36px;">
+          Track workouts, eat smarter, and see real progress. FitForge gives you the tools serious athletes use — without the noise.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:40px;">
+          <button onclick="openAuthModal()" class="btn-accent" style="font-size:1rem;padding:14px 28px;">Start for free →</button>
+          <button onclick="showPage('plans')" class="btn-ghost" style="font-size:1rem;padding:14px 28px;">View plans</button>
+        </div>
+        <div style="display:flex;gap:32px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:#fff;">14-day</div>
+            <div style="font-size:0.75rem;color:#4A6174;font-weight:500;">Free trial</div>
+          </div>
+          <div style="width:1px;background:#1E2D40;"></div>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:#fff;">200+</div>
+            <div style="font-size:0.75rem;color:#4A6174;font-weight:500;">Workout plans</div>
+          </div>
+          <div style="width:1px;background:#1E2D40;"></div>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:#fff;">4.9★</div>
+            <div style="font-size:0.75rem;color:#4A6174;font-weight:500;">App store rating</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero visual: live workout card mockup -->
+      <div style="position:relative;">
+        <div style="background:#0F1923;border:1px solid #1E2D40;border-radius:24px;padding:32px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(232,255,71,0.12),transparent 70%);border-radius:50%;"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+            <div style="width:40px;height:40px;background:#E8FF47;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-flame" style="color:#080C10;font-size:1.2rem;"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;color:#fff;font-size:0.9rem;">Today's Workout</div>
+              <div style="font-size:0.75rem;color:#4A6174;">Push · 55 min</div>
+            </div>
+            <div class="badge badge-green" style="margin-left:auto;">Active</div>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.8rem;">
+              <span style="color:#4A6174;">Progress</span>
+              <span style="color:#E8FF47;font-weight:700;">4 / 6 sets</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:66%;"></div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="background:#080C10;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;">285</div>
+              <div style="font-size:0.7rem;color:#4A6174;margin-top:2px;">lbs lifted</div>
+            </div>
+            <div style="background:#080C10;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;color:#fff;">412</div>
+              <div style="font-size:0.7rem;color:#4A6174;margin-top:2px;">kcal burned</div>
+            </div>
+            <div style="background:#080C10;border-radius:12px;padding:14px;text-align:center;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;color:#E8FF47;">🔥14</div>
+              <div style="font-size:0.7rem;color:#4A6174;margin-top:2px;">day streak</div>
+            </div>
+          </div>
+
+          <div style="background:#080C10;border-radius:12px;padding:14px;">
+            <div style="font-size:0.75rem;color:#4A6174;margin-bottom:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Next exercise</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(232,255,71,0.08);border:1px solid rgba(232,255,71,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="ti ti-chevron-right" style="color:#E8FF47;font-size:0.9rem;"></i>
+              </div>
+              <div>
+                <div style="color:#fff;font-weight:600;font-size:0.88rem;">Incline Dumbbell Press</div>
+                <div style="color:#4A6174;font-size:0.75rem;">3 × 10 @ 70 lbs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line" style="max-width:1200px;margin:0 auto;"></div>
+
+  <!-- Goals section -->
+  <section style="max-width:1200px;margin:0 auto;padding:64px 24px;">
+    <div style="text-align:center;margin-bottom:48px;">
+      <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#E8FF47;margin-bottom:12px;">What's your goal?</div>
+      <h2 class="display" style="font-size:clamp(2.5rem,5vw,4rem);color:#fff;">PICK YOUR PATH</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+      <div class="goal-card" onclick="openGoalDetails('Fat Loss')">
+        <div class="goal-number">01</div>
+        <div style="font-size:2rem;margin:12px 0 10px;">🔥</div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:8px;text-transform:uppercase;">Fat Loss</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;">Burn fat, keep muscle. We dial in your deficit and training to maximize results.</p>
+        <div style="margin-top:16px;color:#E8FF47;font-size:0.8rem;font-weight:600;">Learn more →</div>
+      </div>
+      <div class="goal-card" onclick="openGoalDetails('Muscle Gain')">
+        <div class="goal-number">02</div>
+        <div style="font-size:2rem;margin:12px 0 10px;">🏋️</div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:8px;text-transform:uppercase;">Muscle Gain</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;">Progressive overload, optimized macros, and smart recovery to pack on size.</p>
+        <div style="margin-top:16px;color:#E8FF47;font-size:0.8rem;font-weight:600;">Learn more →</div>
+      </div>
+      <div class="goal-card" onclick="openGoalDetails('Performance')">
+        <div class="goal-number">03</div>
+        <div style="font-size:2rem;margin:12px 0 10px;">⚡</div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:8px;text-transform:uppercase;">Performance</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;">Speed, power, and endurance — built around your sport and schedule.</p>
+        <div style="margin-top:16px;color:#E8FF47;font-size:0.8rem;font-weight:600;">Learn more →</div>
+      </div>
+      <div class="goal-card" onclick="openGoalDetails('Maintain')">
+        <div class="goal-number">04</div>
+        <div style="font-size:2rem;margin:12px 0 10px;">⚖️</div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:8px;text-transform:uppercase;">Maintain</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;">Stay consistent and healthy. Balanced training with sustainable nutrition habits.</p>
+        <div style="margin-top:16px;color:#E8FF47;font-size:0.8rem;font-weight:600;">Learn more →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section style="background:#0F1923;border-top:1px solid #1E2D40;border-bottom:1px solid #1E2D40;padding:64px 24px;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:40px;">
+        <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#E8FF47;margin-bottom:12px;">What members say</div>
+        <h2 class="display" style="font-size:clamp(2rem,4vw,3.5rem);color:#fff;">REAL RESULTS</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+        <div class="testimonial">
+          <div style="color:#E8FF47;margin-bottom:12px;font-size:0.9rem;">★★★★★</div>
+          <p style="font-size:0.88rem;color:#C8D8E8;line-height:1.7;margin-bottom:16px;">"Lost 18 lbs in 3 months without losing strength. The nutrition tracker actually works with your training instead of against it."</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1E2D40;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#E8FF47;">JR</div>
+            <div><div style="font-size:0.83rem;font-weight:600;color:#fff;">James R.</div><div style="font-size:0.73rem;color:#4A6174;">Fat Loss · 3 months</div></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div style="color:#E8FF47;margin-bottom:12px;font-size:0.9rem;">★★★★★</div>
+          <p style="font-size:0.88rem;color:#C8D8E8;line-height:1.7;margin-bottom:16px;">"Finally hit a 315 bench after 6 months on the 5×5 plan. The progressive overload tracking made the difference."</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1E2D40;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#E8FF47;">SM</div>
+            <div><div style="font-size:0.83rem;font-weight:600;color:#fff;">Sara M.</div><div style="font-size:0.73rem;color:#4A6174;">Strength · 6 months</div></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div style="color:#E8FF47;margin-bottom:12px;font-size:0.9rem;">★★★★★</div>
+          <p style="font-size:0.88rem;color:#C8D8E8;line-height:1.7;margin-bottom:16px;">"Best fitness app I've ever used. Clean, fast, and the meal recommendations actually taste good."</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1E2D40;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#E8FF47;">AK</div>
+            <div><div style="font-size:0.83rem;font-weight:600;color:#fff;">Ali K.</div><div style="font-size:0.73rem;color:#4A6174;">Performance · 4 months</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section style="max-width:1200px;margin:0 auto;padding:64px 24px;">
+    <div style="background:#E8FF47;border-radius:24px;padding:48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;">
+      <div>
+        <h2 class="display" style="font-size:clamp(2rem,4vw,3.5rem);color:#080C10;margin-bottom:8px;">READY TO START?</h2>
+        <p style="color:rgba(8,12,16,0.6);font-size:0.95rem;">14-day free trial. No credit card required.</p>
+      </div>
+      <button onclick="openAuthModal()" style="background:#080C10;color:#E8FF47;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase;letter-spacing:0.04em;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;white-space:nowrap;">
+        Create free account →
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 2. DASHBOARD                               -->
+<!-- ══════════════════════════════════════════ -->
+<div id="dashboard" class="page-view" style="max-width:1200px;margin:0 auto;padding:48px 24px;">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:36px;">
+    <div>
+      <h2 class="display" style="font-size:2.5rem;color:#fff;">YOUR DASHBOARD</h2>
+      <p style="color:#4A6174;font-size:0.85rem;margin-top:4px;">Thursday, June 19 · Week 3 of your plan</p>
+    </div>
+    <button onclick="openLogModal()" class="btn-accent" style="font-size:0.85rem;padding:11px 20px;">
+      <i class="ti ti-plus"></i> Log Workout
+    </button>
+  </div>
+
+  <!-- Stats strip -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+    <div class="panel" style="padding:20px;">
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:8px;">Body Weight</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;">182.4 <span style="font-size:1rem;color:#4A6174;">lbs</span></div>
+      <div style="font-size:0.75rem;color:#34d399;margin-top:4px;"><i class="ti ti-trending-down"></i> −1.2 lbs this week</div>
+    </div>
+    <div class="panel" style="padding:20px;">
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:8px;">Body Fat</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;">12.4 <span style="font-size:1rem;color:#4A6174;">%</span></div>
+      <div style="font-size:0.75rem;color:#34d399;margin-top:4px;"><i class="ti ti-trending-down"></i> −0.3% this week</div>
+    </div>
+    <div class="panel" style="padding:20px;">
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:8px;">Streak</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:#E8FF47;">🔥 14 <span style="font-size:1rem;color:#4A6174;">days</span></div>
+      <div style="font-size:0.75rem;color:#4A6174;margin-top:4px;">Personal best!</div>
+    </div>
+    <div class="panel" style="padding:20px;">
+      <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:8px;">Weekly Volume</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:#fff;">67.9 <span style="font-size:1rem;color:#4A6174;">k lbs</span></div>
+      <div style="font-size:0.75rem;color:#34d399;margin-top:4px;"><i class="ti ti-trending-up"></i> +12% vs last week</div>
+    </div>
+  </div>
+
+  <!-- Chart + Macros -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;" class="chart-grid">
+    <div class="panel" style="padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="font-size:0.88rem;font-weight:600;color:#fff;">Weekly Volume</div>
+        <span class="badge badge-muted">This Week</span>
+      </div>
+      <div style="height:220px;"><canvas id="dashboardChart"></canvas></div>
+    </div>
+
+    <div class="panel" style="padding:24px;">
+      <div style="font-size:0.88rem;font-weight:600;color:#fff;margin-bottom:20px;">Today's Macros</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px;">
+            <span style="color:#C8D8E8;font-weight:500;">Protein</span>
+            <span style="color:#E8FF47;font-weight:700;">150g / 200g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:75%;background:#E8FF47;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px;">
+            <span style="color:#C8D8E8;font-weight:500;">Carbs</span>
+            <span style="color:#fb923c;font-weight:700;">165g / 300g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:55%;background:#fb923c;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px;">
+            <span style="color:#C8D8E8;font-weight:500;">Fats</span>
+            <span style="color:#facc15;font-weight:700;">32g / 80g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:40%;background:#facc15;"></div></div>
+        </div>
+        <div style="border-top:1px solid #1E2D40;padding-top:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:6px;">
+            <span style="color:#4A6174;">Calories</span>
+            <span style="color:#34d399;font-weight:700;">1,160 / 2,400 kcal</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:48%;background:#34d399;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workout history -->
+  <div class="panel" style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:0.88rem;font-weight:600;color:#fff;">Workout History</div>
+      <button onclick="openLogModal()" style="background:none;border:none;color:#E8FF47;font-size:0.78rem;font-weight:600;cursor:pointer;">+ Add entry</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" style="width:100%;">
+        <thead><tr>
+          <th>Workout</th>
+          <th>Date</th>
+          <th>Duration</th>
+          <th style="text-align:right;">Status</th>
+        </tr></thead>
+        <tbody id="workout-records-body">
+          <tr>
+            <td><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#E8FF47;flex-shrink:0;"></span><span style="font-weight:600;color:#fff;">Heavy Squat Push Day</span></span></td>
+            <td style="color:#4A6174;">Today, 07:15 AM</td>
+            <td>55 min</td>
+            <td style="text-align:right;"><span class="badge badge-accent">PR Hit 🏆</span></td>
+          </tr>
+          <tr>
+            <td><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#fb923c;flex-shrink:0;"></span><span style="font-weight:600;color:#fff;">Posterior Chain Pull</span></span></td>
+            <td style="color:#4A6174;">Yesterday, 06:40 AM</td>
+            <td>62 min</td>
+            <td style="text-align:right;"><span class="badge badge-muted">Complete</span></td>
+          </tr>
+          <tr>
+            <td><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0;"></span><span style="font-weight:600;color:#fff;">Upper Body Strength</span></span></td>
+            <td style="color:#4A6174;">Mon, 08:00 AM</td>
+            <td>48 min</td>
+            <td style="text-align:right;"><span class="badge badge-muted">Complete</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 3. PLANS                                   -->
+<!-- ══════════════════════════════════════════ -->
+<div id="plans" class="page-view" style="max-width:1200px;margin:0 auto;padding:48px 24px;">
+  <div style="margin-bottom:40px;">
+    <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#E8FF47;margin-bottom:8px;">Training programs</div>
+    <h2 class="display" style="font-size:clamp(2.5rem,5vw,4rem);color:#fff;">PICK YOUR PROGRAM</h2>
+    <p style="color:#4A6174;margin-top:12px;max-width:500px;">Science-backed programs built by certified coaches. Filter by goal, level, and weekly frequency.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+    <!-- Plan 1 -->
+    <div class="plan-card">
+      <div style="padding:24px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="badge badge-accent">Advanced</span>
+          <span style="font-size:0.78rem;color:#4A6174;"><i class="ti ti-calendar"></i> 6 days / week</span>
+        </div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:8px;">Push / Pull / Legs</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;margin-bottom:16px;">The gold-standard hypertrophy split. High volume per muscle group with optimized recovery windows.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-target"></i> Hypertrophy</span>
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-clock"></i> 60–75 min sessions</span>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #1E2D40;">
+        <button onclick="startPlanAction('Push / Pull / Legs')" class="btn-accent" style="width:100%;justify-content:center;font-size:0.85rem;padding:12px;">Start this program →</button>
+      </div>
+    </div>
+    <!-- Plan 2 -->
+    <div class="plan-card">
+      <div style="padding:24px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="badge badge-green">Beginner–Int.</span>
+          <span style="font-size:0.78rem;color:#4A6174;"><i class="ti ti-calendar"></i> 3 days / week</span>
+        </div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:8px;">5×5 Strength</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;margin-bottom:16px;">Progressive overload through compound movements. The fastest path to a bigger squat, bench, and deadlift.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-target"></i> Strength</span>
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-clock"></i> 45–55 min sessions</span>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #1E2D40;">
+        <button onclick="startPlanAction('5×5 Strength')" class="btn-ghost" style="width:100%;font-size:0.85rem;padding:12px;">Start this program →</button>
+      </div>
+    </div>
+    <!-- Plan 3 -->
+    <div class="plan-card">
+      <div style="padding:24px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="badge badge-muted">Intermediate</span>
+          <span style="font-size:0.78rem;color:#4A6174;"><i class="ti ti-calendar"></i> 4 days / week</span>
+        </div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:8px;">Upper / Lower Split</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;margin-bottom:16px;">Balanced frequency with a structured training / recovery cycle. Great for gaining strength and size simultaneously.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-target"></i> Strength + Size</span>
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-clock"></i> 50–65 min sessions</span>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #1E2D40;">
+        <button onclick="startPlanAction('Upper / Lower Split')" class="btn-ghost" style="width:100%;font-size:0.85rem;padding:12px;">Start this program →</button>
+      </div>
+    </div>
+    <!-- Plan 4 -->
+    <div class="plan-card">
+      <div style="padding:24px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="badge badge-green">All levels</span>
+          <span style="font-size:0.78rem;color:#4A6174;"><i class="ti ti-calendar"></i> 5 days / week</span>
+        </div>
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:8px;">HIIT & Fat Burn</h3>
+        <p style="font-size:0.83rem;color:#4A6174;line-height:1.6;margin-bottom:16px;">High-intensity intervals combined with resistance work. Maximizes calorie burn in 30–40 minute sessions.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-target"></i> Fat Loss</span>
+          <span style="font-size:0.75rem;color:#4A6174;"><i class="ti ti-clock"></i> 30–40 min sessions</span>
+        </div>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #1E2D40;">
+        <button onclick="startPlanAction('HIIT & Fat Burn')" class="btn-ghost" style="width:100%;font-size:0.85rem;padding:12px;">Start this program →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 4. MEALS                                   -->
+<!-- ══════════════════════════════════════════ -->
+<div id="meals" class="page-view" style="max-width:1200px;margin:0 auto;padding:48px 24px;">
+  <div style="margin-bottom:32px;">
+    <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#E8FF47;margin-bottom:8px;">Nutrition</div>
+    <h2 class="display" style="font-size:clamp(2.5rem,5vw,4rem);color:#fff;">EAT TO PERFORM</h2>
+  </div>
+
+  <!-- Daily summary -->
+  <div class="panel" style="padding:24px;margin-bottom:28px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-size:0.85rem;font-weight:600;color:#fff;margin-bottom:4px;">Today's Nutrition</div>
+      <div style="font-size:0.8rem;color:#4A6174;">Thursday, June 19</div>
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:#fff;">2,400</div>
+        <div style="font-size:0.7rem;color:#4A6174;text-transform:uppercase;letter-spacing:0.08em;">Target kcal</div>
+      </div>
+      <div style="width:1px;background:#1E2D40;"></div>
+      <div style="text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:#E8FF47;">1,160</div>
+        <div style="font-size:0.7rem;color:#4A6174;text-transform:uppercase;letter-spacing:0.08em;">Eaten</div>
+      </div>
+      <div style="width:1px;background:#1E2D40;"></div>
+      <div style="text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:#34d399;">1,240</div>
+        <div style="font-size:0.7rem;color:#4A6174;text-transform:uppercase;letter-spacing:0.08em;">Remaining</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:20px;">Meal Ideas</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+    <!-- Meal 1 -->
+    <div class="meal-card">
+      <div style="height:180px;overflow:hidden;position:relative;">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600" alt="Salmon Bowl" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span class="badge badge-accent" style="position:absolute;top:12px;left:12px;">High Protein</span>
+      </div>
+      <div style="padding:18px;">
+        <h4 style="font-weight:600;color:#fff;font-size:0.95rem;margin-bottom:8px;">Wild Salmon & Avocado Bowl</h4>
+        <div style="display:flex;justify-content:space-between;background:#080C10;border-radius:8px;padding:10px;font-size:0.78rem;color:#4A6174;margin-bottom:14px;">
+          <span>Protein: <strong style="color:#fff;">42g</strong></span>
+          <span>Carbs: <strong style="color:#fff;">12g</strong></span>
+          <span>Fats: <strong style="color:#fff;">24g</strong></span>
+          <span style="color:#E8FF47;font-weight:700;">480 kcal</span>
+        </div>
+        <button onclick="openRecipeModal('Salmon')" class="btn-ghost" style="width:100%;padding:10px;font-size:0.8rem;">View recipe</button>
+      </div>
+    </div>
+    <!-- Meal 2 -->
+    <div class="meal-card">
+      <div style="height:180px;overflow:hidden;position:relative;">
+        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=600" alt="Chicken" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span class="badge badge-green" style="position:absolute;top:12px;left:12px;">Lean</span>
+      </div>
+      <div style="padding:18px;">
+        <h4 style="font-weight:600;color:#fff;font-size:0.95rem;margin-bottom:8px;">Grilled Chicken & Brown Rice</h4>
+        <div style="display:flex;justify-content:space-between;background:#080C10;border-radius:8px;padding:10px;font-size:0.78rem;color:#4A6174;margin-bottom:14px;">
+          <span>Protein: <strong style="color:#fff;">54g</strong></span>
+          <span>Carbs: <strong style="color:#fff;">38g</strong></span>
+          <span>Fats: <strong style="color:#fff;">8g</strong></span>
+          <span style="color:#E8FF47;font-weight:700;">520 kcal</span>
+        </div>
+        <button onclick="openRecipeModal('Chicken')" class="btn-ghost" style="width:100%;padding:10px;font-size:0.8rem;">View recipe</button>
+      </div>
+    </div>
+    <!-- Meal 3 -->
+    <div class="meal-card">
+      <div style="height:180px;overflow:hidden;position:relative;">
+        <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=600" alt="Oats" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span class="badge badge-muted" style="position:absolute;top:12px;left:12px;">Pre-Workout</span>
+      </div>
+      <div style="padding:18px;">
+        <h4 style="font-weight:600;color:#fff;font-size:0.95rem;margin-bottom:8px;">Oat & Banana Protein Bowl</h4>
+        <div style="display:flex;justify-content:space-between;background:#080C10;border-radius:8px;padding:10px;font-size:0.78rem;color:#4A6174;margin-bottom:14px;">
+          <span>Protein: <strong style="color:#fff;">28g</strong></span>
+          <span>Carbs: <strong style="color:#fff;">62g</strong></span>
+          <span>Fats: <strong style="color:#fff;">9g</strong></span>
+          <span style="color:#E8FF47;font-weight:700;">440 kcal</span>
+        </div>
+        <button onclick="openRecipeModal('Oats')" class="btn-ghost" style="width:100%;padding:10px;font-size:0.8rem;">View recipe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 5. PRICING                                 -->
+<!-- ══════════════════════════════════════════ -->
+<div id="pricing" class="page-view" style="max-width:1200px;margin:0 auto;padding:48px 24px;">
+  <div style="text-align:center;margin-bottom:48px;">
+    <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#E8FF47;margin-bottom:8px;">Simple pricing</div>
+    <h2 class="display" style="font-size:clamp(2.5rem,5vw,4rem);color:#fff;">START FREE.<br>UPGRADE WHEN READY.</h2>
+  </div>
+
+  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:900px;margin:0 auto;">
+    <!-- Free -->
+    <div class="pricing-card" style="max-width:300px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:16px;">Free</div>
+      <div style="margin-bottom:24px;"><span class="price-amount">$0</span><span style="color:#4A6174;font-size:0.85rem;"> / month</span></div>
+      <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>3 workout plans</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>Basic progress tracking</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>5 meal recipes</li>
+        <li style="font-size:0.85rem;color:#4A6174;"><span style="margin-right:8px;">✗</span>AI recommendations</li>
+        <li style="font-size:0.85rem;color:#4A6174;"><span style="margin-right:8px;">✗</span>Custom plans</li>
+      </ul>
+      <button onclick="openAuthModal()" class="btn-ghost" style="width:100%;padding:13px;">Get started free</button>
+    </div>
+
+    <!-- Pro (featured) -->
+    <div class="pricing-card featured" style="max-width:300px;position:relative;">
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#E8FF47;color:#080C10;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;padding:4px 14px;border-radius:100px;">Most Popular</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:16px;">Pro</div>
+      <div style="margin-bottom:24px;"><span class="price-amount">$12</span><span style="color:#4A6174;font-size:0.85rem;"> / month</span></div>
+      <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#E8FF47;margin-right:8px;">✓</span>200+ workout plans</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#E8FF47;margin-right:8px;">✓</span>Full progress analytics</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#E8FF47;margin-right:8px;">✓</span>Unlimited meal plans</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#E8FF47;margin-right:8px;">✓</span>AI recommendations</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#E8FF47;margin-right:8px;">✓</span>Custom program builder</li>
+      </ul>
+      <button onclick="openAuthModal()" class="btn-accent" style="width:100%;padding:13px;justify-content:center;font-size:0.9rem;">Start 14-day free trial →</button>
+    </div>
+
+    <!-- Elite -->
+    <div class="pricing-card" style="max-width:300px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:16px;">Elite</div>
+      <div style="margin-bottom:24px;"><span class="price-amount">$29</span><span style="color:#4A6174;font-size:0.85rem;"> / month</span></div>
+      <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>Everything in Pro</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>1-on-1 coach sessions</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>Blood panel analysis</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>Priority support 24/7</li>
+        <li style="font-size:0.85rem;color:#C8D8E8;"><span style="color:#34d399;margin-right:8px;">✓</span>Supplement stack guide</li>
+      </ul>
+      <button onclick="openAuthModal()" class="btn-ghost" style="width:100%;padding:13px;">Upgrade to Elite</button>
+    </div>
+  </div>
+  <p style="text-align:center;margin-top:24px;font-size:0.8rem;color:#4A6174;">All plans include a 14-day free trial. Cancel anytime. No questions asked.</p>
+</div>
+
+</main>
+
+<!-- ═══ FOOTER ═══ -->
+<footer style="border-top:1px solid #1E2D40;background:#0F1923;padding:40px 24px;margin-top:40px;">
+  <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#E8FF47"/><path d="M6 14h3l2-5 4 10 2-5h5" stroke="#080C10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;color:#fff;text-transform:uppercase;">FitForge</span>
+    </div>
+    <div style="font-size:0.78rem;color:#4A6174;">© 2026 FitForge. Built for athletes who take it seriously.</div>
+    <div style="display:flex;gap:20px;">
+      <a href="#" style="font-size:0.78rem;color:#4A6174;text-decoration:none;" onmouseover="this.style.color='#E8FF47'" onmouseout="this.style.color='#4A6174'">Privacy</a>
+      <a href="#" style="font-size:0.78rem;color:#4A6174;text-decoration:none;" onmouseover="this.style.color='#E8FF47'" onmouseout="this.style.color='#4A6174'">Terms</a>
+      <a href="#" style="font-size:0.78rem;color:#4A6174;text-decoration:none;" onmouseover="this.style.color='#E8FF47'" onmouseout="this.style.color='#4A6174'">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="modal-backdrop hidden">
+  <div class="modal-panel">
+    <button onclick="closeAuthModal()" style="position:absolute;top:16px;right:16px;background:#080C10;border:1px solid #1E2D40;border-radius:8px;padding:6px;color:#4A6174;cursor:pointer;"><i class="ti ti-x"></i></button>
+    <div style="margin-bottom:24px;">
+      <h3 class="display" style="font-size:1.8rem;color:#fff;">JOIN FITFORGE</h3>
+      <p style="font-size:0.8rem;color:#4A6174;margin-top:4px;">14-day free trial. No credit card needed.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <button onclick="simulateThirdPartyAuth('Google')" style="background:#080C10;border:1px solid #1E2D40;border-radius:10px;padding:11px;color:#C8D8E8;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#E8FF47'" onmouseout="this.style.borderColor='#1E2D40'">
+        <i class="ti ti-brand-google" style="color:#ea4335;"></i> Google
+      </button>
+      <button onclick="simulateThirdPartyAuth('Apple')" style="background:#080C10;border:1px solid #1E2D40;border-radius:10px;padding:11px;color:#C8D8E8;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#E8FF47'" onmouseout="this.style.borderColor='#1E2D40'">
+        <i class="ti ti-brand-apple"></i> Apple
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="flex:1;height:1px;background:#1E2D40;"></div>
+      <span style="font-size:0.72rem;color:#4A6174;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">or email</span>
+      <div style="flex:1;height:1px;background:#1E2D40;"></div>
+    </div>
+    <form onsubmit="executeLoginSequence(event)" style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="field-label">Email</label>
+        <input type="email" required placeholder="you@example.com" class="input-field">
+      </div>
+      <div>
+        <label class="field-label" style="display:flex;justify-content:space-between;"><span>Password</span><a href="#" onclick="showToast('Password reset link sent to your email.','info')" style="font-weight:600;color:#E8FF47;text-decoration:none;font-size:0.72rem;text-transform:none;letter-spacing:0;">Forgot?</a></label>
+        <input type="password" required placeholder="••••••••" class="input-field">
+      </div>
+      <button type="submit" class="btn-accent" style="width:100%;justify-content:center;padding:13px;font-size:0.95rem;">Create account →</button>
+    </form>
+    <p style="text-align:center;font-size:0.75rem;color:#4A6174;margin-top:14px;">Already a member? <a href="#" onclick="executeLoginSequence(event)" style="color:#E8FF47;text-decoration:none;">Sign in</a></p>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div id="goal-modal" class="modal-backdrop hidden">
+  <div class="modal-panel" style="max-width:480px;">
+    <button onclick="closeGoalModal()" style="position:absolute;top:16px;right:16px;background:#080C10;border:1px solid #1E2D40;border-radius:8px;padding:6px;color:#4A6174;cursor:pointer;"><i class="ti ti-x"></i></button>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+      <div id="goal-icon" style="font-size:2.5rem;">🔥</div>
+      <div>
+        <h3 id="goal-title" class="display" style="font-size:2rem;color:#fff;"></h3>
+      </div>
+    </div>
+    <div id="goal-description" style="color:#C8D8E8;font-size:0.88rem;line-height:1.7;margin-bottom:24px;"></div>
+    <button onclick="closeGoalModal();openAuthModal()" class="btn-accent" style="width:100%;justify-content:center;padding:13px;">Start this goal →</button>
+  </div>
+</div>
+
+<!-- Log Workout Modal -->
+<div id="log-modal" class="modal-backdrop hidden">
+  <div class="modal-panel">
+    <button onclick="closeLogModal()" style="position:absolute;top:16px;right:16px;background:#080C10;border:1px solid #1E2D40;border-radius:8px;padding:6px;color:#4A6174;cursor:pointer;"><i class="ti ti-x"></i></button>
+    <h3 class="display" style="font-size:1.8rem;color:#fff;margin-bottom:4px;">LOG WORKOUT</h3>
+    <p style="font-size:0.8rem;color:#4A6174;margin-bottom:24px;">Add a session to your history.</p>
+    <form onsubmit="commitWorkoutLog(event)" style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="field-label">Workout name</label>
+        <input type="text" id="input-log-name" required placeholder="e.g., Heavy Squat Day" class="input-field">
+      </div>
+      <div>
+        <label class="field-label">Duration (minutes)</label>
+        <input type="number" id="input-log-duration" required placeholder="45" class="input-field">
+      </div>
+      <button type="submit" class="btn-accent" style="width:100%;justify-content:center;padding:13px;font-size:0.95rem;">Save workout</button>
+    </form>
+  </div>
+</div>
+
+<!-- Recipe Modal -->
+<div id="recipe-modal" class="modal-backdrop hidden">
+  <div class="modal-panel" style="max-width:480px;">
+    <button onclick="closeRecipeModal()" style="position:absolute;top:16px;right:16px;background:#080C10;border:1px solid #1E2D40;border-radius:8px;padding:6px;color:#4A6174;cursor:pointer;"><i class="ti ti-x"></i></button>
+    <h3 id="recipe-modal-title" class="display" style="font-size:1.8rem;color:#fff;margin-bottom:20px;"></h3>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:10px;">Ingredients</div>
+      <ul id="recipe-modal-ingredients" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;"></ul>
+    </div>
+    <div style="border-top:1px solid #1E2D40;padding-top:18px;">
+      <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4A6174;margin-bottom:10px;">Instructions</div>
+      <p id="recipe-modal-instructions" style="font-size:0.87rem;color:#C8D8E8;line-height:1.7;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+  const state = { userAuthenticated: false, activeUser: null, chartInstance: null };
+
+  // Mobile menu
+  function toggleMobileMenu() {
+    const m = document.getElementById('mobile-menu');
+    m.classList.toggle('open');
+  }
+
+  // Routing
+  function showPage(id) {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    ['home','dashboard','plans','meals','pricing'].forEach(n => {
+      const el = document.getElementById('nav-' + n);
+      if (el) el.className = 'nav-link' + (n === id ? ' active-nav' : '');
+    });
+    if (id === 'dashboard' && state.chartInstance) setTimeout(() => state.chartInstance.update(), 50);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  // Toast
+  function showToast(msg, variant = 'success') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    const icon = variant === 'success'
+      ? '<i class="ti ti-circle-check" style="color:#34d399;font-size:1rem;flex-shrink:0;"></i>'
+      : '<i class="ti ti-info-circle" style="color:#60a5fa;font-size:1rem;flex-shrink:0;"></i>';
+    t.innerHTML = icon + '<span>' + msg + '</span>';
+    c.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
+  }
+
+  // Auth
+  function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
+  function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+  function executeLoginSequence(e) { e.preventDefault(); authorizeSession('FitForge_Member'); }
+  function simulateThirdPartyAuth(p) { authorizeSession(p + '_Athlete'); }
+  function authorizeSession(alias) {
+    state.userAuthenticated = true;
+    state.activeUser = { username: alias };
+    closeAuthModal();
+    showToast('Welcome back, ' + alias + '! 💪');
+    document.getElementById('nav-auth-zone').innerHTML = `
+      <div style="position:relative;" class="group">
+        <button style="display:flex;align-items:center;gap:8px;background:#0F1923;border:1px solid #1E2D40;border-radius:100px;padding:6px 14px 6px 6px;cursor:pointer;">
+          <div style="width:28px;height:28px;background:#E8FF47;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:0.75rem;color:#080C10;">${alias.substring(0,2).toUpperCase()}</div>
+          <span style="font-size:0.8rem;font-weight:600;color:#C8D8E8;">${alias}</span>
+          <i class="ti ti-chevron-down" style="color:#4A6174;font-size:0.8rem;"></i>
+        </button>
+      </div>`;
+    showPage('dashboard');
+  }
+
+  // Goal modal
+  const goalData = {
+    'Fat Loss': { desc: 'Your training will be built around a sustainable calorie deficit combined with resistance training to preserve muscle. Expect cardio finishers, compound lifts, and weekly check-ins on your intake vs. output. Most members see visible results in 4–6 weeks.', icon: '🔥' },
+    'Muscle Gain': { desc: 'Progressive overload is the engine. We\'ll push your volume up week over week on the big lifts, match your training with a slight calorie surplus, and prioritize protein timing. Expect to add 0.5–1 lb of lean mass per week.', icon: '🏋️' },
+    'Performance': { desc: 'Built for athletes. Your plan combines speed work, power development, and sport-specific conditioning. Tracking goes beyond weight — we measure velocity, rep quality, and recovery rate to keep you peaking when it matters.', icon: '⚡' },
+    'Maintain': { desc: 'A balanced, sustainable lifestyle program. Consistent training 3–4 days per week, flexible nutrition targets, and enough variety to keep it enjoyable long-term. Perfect if you want to stay fit without obsessing over numbers.', icon: '⚖️' }
+  };
+  function openGoalDetails(key) {
+    const d = goalData[key];
+    document.getElementById('goal-title').textContent = key;
+    document.getElementById('goal-icon').textContent = d.icon;
+    document.getElementById('goal-description').textContent = d.desc;
+    document.getElementById('goal-modal').classList.remove('hidden');
+  }
+  function closeGoalModal() { document.getElementById('goal-modal').classList.add('hidden'); }
+
+  // Log workout
+  function openLogModal() { document.getElementById('log-modal').classList.remove('hidden'); }
+  function closeLogModal() { document.getElementById('log-modal').classList.add('hidden'); }
+  function commitWorkoutLog(e) {
+    e.preventDefault();
+    const name = document.getElementById('input-log-name').value;
+    const dur = document.getElementById('input-log-duration').value;
+    const tbody = document.getElementById('workout-records-body');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#E8FF47;flex-shrink:0;"></span><span style="font-weight:600;color:#fff;">${name}</span></span></td>
+      <td style="color:#4A6174;">Just now</td>
+      <td>${dur} min</td>
+      <td style="text-align:right;"><span class="badge badge-accent">Logged ✓</span></td>`;
+    tbody.insertBefore(row, tbody.firstChild);
+    closeLogModal();
+    showToast('Workout "' + name + '" logged successfully.');
+    e.target.reset();
+  }
+
+  // Plans
+  function startPlanAction(name) { showToast('Program activated: ' + name + '. Check your dashboard.'); showPage('dashboard'); }
+
+  // Recipe
+  const recipes = {
+    'Salmon': {
+      title: 'Wild Salmon & Avocado Bowl',
+      ingredients: ['6 oz wild-caught salmon fillet', '2 poached eggs', '½ Hass avocado, sliced', '50g fresh spinach', 'Lemon, olive oil, salt & pepper'],
+      instructions: 'Sear salmon skin-side down in a hot pan with olive oil for 4 minutes, flip and cook 2 more minutes. Poach eggs in simmering water for 3 minutes. Build the bowl: spinach base, salmon, avocado, eggs. Season with lemon juice, salt, and pepper.'
+    },
+    'Chicken': {
+      title: 'Grilled Chicken & Brown Rice',
+      ingredients: ['8 oz free-range chicken breast', '150g broccoli florets', '100g cooked brown rice', 'Garlic, olive oil, paprika, salt'],
+      instructions: 'Marinate chicken in olive oil, garlic, and paprika for 20 minutes. Grill on medium-high heat for 6 minutes per side until internal temperature reaches 165°F. Steam broccoli for 5 minutes. Serve over brown rice.'
+    },
+    'Oats': {
+      title: 'Oat & Banana Protein Bowl',
+      ingredients: ['80g rolled oats', '1 ripe banana, sliced', '1 scoop vanilla protein powder', '200ml oat milk', '1 tbsp almond butter', 'Cinnamon to taste'],
+      instructions: 'Cook oats with oat milk on medium heat for 5 minutes, stirring occasionally. Remove from heat and stir in protein powder. Top with banana slices, almond butter, and cinnamon. Serve warm.'
+    }
+  };
+  function openRecipeModal(key) {
+    const r = recipes[key]; if(!r) return;
+    document.getElementById('recipe-modal-title').textContent = r.title;
+    const ul = document.getElementById('recipe-modal-ingredients');
+    ul.innerHTML = '';
+    r.ingredients.forEach(i => {
+      const li = document.createElement('li');
+      li.style.cssText = 'font-size:0.85rem;color:#C8D8E8;display:flex;align-items:center;gap:8px;';
+      li.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;background:#E8FF47;flex-shrink:0;display:inline-block;"></span>' + i;
+      ul.appendChild(li);
+    });
+    document.getElementById('recipe-modal-instructions').textContent = r.instructions;
+    document.getElementById('recipe-modal').classList.remove('hidden');
+  }
+  function closeRecipeModal() { document.getElementById('recipe-modal').classList.add('hidden'); }
+
+  // Close modals on backdrop click
+  ['auth-modal','goal-modal','log-modal','recipe-modal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+  });
+
+  // Chart
+  document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 220);
+    grad.addColorStop(0, 'rgba(232,255,71,0.18)');
+    grad.addColorStop(1, 'rgba(232,255,71,0)');
+    state.chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{
+          label: 'Volume (lbs)',
+          data: [12400, 15100, 0, 14200, 16800, 9400, 0],
+          borderColor: '#E8FF47',
+          borderWidth: 2,
+          backgroundColor: grad,
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#E8FF47',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0F1923', borderColor: '#1E2D40', borderWidth: 1, titleColor: '#C8D8E8', bodyColor: '#E8FF47', padding: 10 } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#4A6174', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#4A6174', font: { size: 11 } } }
+        }
+      }
+    });
+  });
+
+  // Responsive hero grid
+  const style = document.createElement('style');
+  style.textContent = '@media(max-width:768px){.hero-grid{grid-template-columns:1fr!important;}.chart-grid{grid-template-columns:1fr!important;}}';
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
